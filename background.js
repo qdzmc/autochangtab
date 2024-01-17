@@ -1,33 +1,31 @@
-let intervalId;
+let tabRotationInterval;
+let currentIndex = 0;
 
-function switchTabs() {
-  chrome.tabs.query({ currentWindow: true }, function (tabs) {
-    const activeTab = tabs.find(tab => tab.active);
-    const nextTab = tabs[(activeTab.index + 1) % tabs.length];
-
-    chrome.tabs.update(nextTab.id, { active: true }, function () {
-      // 切换标签后，将当前窗口全屏
-      chrome.windows.getCurrent(function (currentWindow) {
-        chrome.windows.update(currentWindow.id, { state: 'fullscreen' });
-      });
-    });
-  });
-}
-
-
-function startSwitchingTabs(interval) {
-  stopSwitchingTabs(); // 确保只有一个定时器在运行
-  intervalId = setInterval(switchTabs, interval);
-}
-
-function stopSwitchingTabs() {
-  clearInterval(intervalId);
-}
-
-chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-  if (message.command === 'startSwitchingTabs') {
-    startSwitchingTabs(message.interval || 10000); // 默认切换间隔为10秒
-  } else if (message.command === 'stopSwitchingTabs') {
-    stopSwitchingTabs();
-  }
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.command === "start") {
+        chrome.tabs.query({currentWindow: true}, function(tabs) {
+            if (tabRotationInterval) clearInterval(tabRotationInterval);
+            tabRotationInterval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % tabs.length;
+                for (let i = 0; i < tabs.length; i++) {
+                    if (i === currentIndex) {
+                        // 解除当前标签的静音并激活该标签
+                        chrome.tabs.update(tabs[i].id, {muted: false, active: true});
+                    } else {
+                        // 静音非活动的标签
+                        chrome.tabs.update(tabs[i].id, {muted: true});
+                    }
+                }
+            }, request.interval);
+        });
+    } else if (request.command === "stop") {
+        clearInterval(tabRotationInterval);
+        tabRotationInterval = null;
+        // 停止后解除所有标签的静音
+        chrome.tabs.query({currentWindow: true}, function(tabs) {
+            for (let tab of tabs) {
+                chrome.tabs.update(tab.id, {muted: false});
+            }
+        });
+    }
 });

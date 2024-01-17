@@ -1,16 +1,25 @@
 {
-  "manifest_version": 2,
-  "name": "Auto Tab Switcher",
-  "version": "1.0",
-  "description": "定时切换标签页的插件",
-  "permissions": [
-    "tabs"
-  ],
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": false
-  },
-  "browser_action": {
-    "default_popup": "popup.html"
-  }
+    "manifest_version": 2,
+    "name": "Tab Rotator",
+    "version": "1.0",
+    "permissions": [
+        "tabs", "activeTab", "<all_urls>"
+    ],
+    "background": {
+        "scripts": ["background.js"],
+        "persistent": false
+    },
+    "browser_action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icon16.png",
+            "48": "icon48.png",
+            "128": "icon128.png"
+        }
+    },
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    }
 }
